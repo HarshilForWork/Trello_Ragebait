@@ -580,6 +580,8 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [newChecklistItem, setNewChecklistItem] = useState('')
+  const [pendingItems, setPendingItems] = useState([]) // For new cards
+  const [titleError, setTitleError] = useState(false)
   const isNew = !card?.id
 
   // Get fresh card data from store for live updates
@@ -598,13 +600,25 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
     if (card) {
       setTitle(card.title || '')
       setDescription(card.description || '')
+      setPendingItems([])
+      setTitleError(false)
     }
   }, [card])
 
   const handleSave = async () => {
-    if (!title.trim()) return
+    if (!title.trim()) {
+      setTitleError(true)
+      return
+    }
+    
     if (isNew) {
-      await store.createCard(card.list_id, title, description)
+      // Create card then add pending checklist items
+      const newCard = await store.createCard(card.list_id, title, description)
+      if (newCard && pendingItems.length > 0) {
+        for (const item of pendingItems) {
+          await store.addChecklistItem(newCard.id, item.text)
+        }
+      }
     } else {
       await store.updateCard(card.id, { title, description })
     }
@@ -612,14 +626,28 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
   }
 
   const handleAddChecklistItem = async () => {
-    if (newChecklistItem.trim() && card?.id) {
+    if (!newChecklistItem.trim()) return
+    
+    if (isNew) {
+      // For new cards, add to pending items
+      setPendingItems(prev => [...prev, { 
+        id: Date.now(), 
+        text: newChecklistItem, 
+        completed: false 
+      }])
+    } else {
+      // For existing cards, add directly to store
       await store.addChecklistItem(card.id, newChecklistItem)
-      setNewChecklistItem('')
     }
+    setNewChecklistItem('')
   }
 
-  // Use freshCard for checklist display
-  const checklist = freshCard?.checklist || []
+  const removePendingItem = (id) => {
+    setPendingItems(prev => prev.filter(item => item.id !== id))
+  }
+
+  // Use freshCard for checklist display (existing cards) or pendingItems (new cards)
+  const checklist = isNew ? pendingItems : (freshCard?.checklist || [])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -629,13 +657,22 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
         </DialogHeader>
         <div className="p-6 pt-0 space-y-4">
           <div>
-            <label className="text-xs font-medium text-white/50 uppercase mb-1 block">Title</label>
+            <label className="text-xs font-medium text-white/50 uppercase mb-1 block">
+              Title <span className="text-red-400">*</span>
+            </label>
             <Input
               placeholder="Enter title"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={e => {
+                setTitle(e.target.value)
+                if (e.target.value.trim()) setTitleError(false)
+              }}
+              className={titleError ? 'border-red-500 focus:border-red-500' : ''}
               autoFocus
             />
+            {titleError && (
+              <p className="text-xs text-red-400 mt-1">Title is required</p>
+            )}
           </div>
           <div>
             <label className="text-xs font-medium text-white/50 uppercase mb-1 block">Description</label>
@@ -647,63 +684,68 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
             />
           </div>
 
-          {!isNew && (
-            <div>
-              <label className="text-xs font-medium text-white/50 uppercase mb-2 block">Checklist</label>
-              
-              {checklist.length > 0 && (
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-3">
-                  <motion.div
-                    className="h-full bg-green-500"
-                    initial={{ width: 0 }}
-                    animate={{ 
-                      width: `${(checklist.filter(i => i.completed).length / checklist.length) * 100}%`
-                    }}
-                  />
-                </div>
-              )}
+          {/* Checklist section - now available for both new and existing cards */}
+          <div>
+            <label className="text-xs font-medium text-white/50 uppercase mb-2 block">Subtasks</label>
+            
+            {checklist.length > 0 && (
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-3">
+                <motion.div
+                  className="h-full bg-green-500"
+                  initial={{ width: 0 }}
+                  animate={{ 
+                    width: `${(checklist.filter(i => i.completed).length / checklist.length) * 100}%`
+                  }}
+                />
+              </div>
+            )}
 
-              <div className="space-y-1.5 mb-3">
-                {checklist.map(item => (
-                  <motion.div
-                    key={item.id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group"
-                    layout
-                  >
+            <div className="space-y-1.5 mb-3 max-h-40 overflow-y-auto">
+              {checklist.map(item => (
+                <motion.div
+                  key={item.id}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group"
+                  layout
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  {!isNew ? (
                     <Checkbox
                       checked={item.completed}
                       onCheckedChange={() => store.toggleChecklistItem(card.id, item.id)}
                     />
-                    <span className={`flex-1 text-sm ${item.completed ? 'line-through text-white/40' : 'text-white'}`}>
-                      {item.text}
-                    </span>
-                    <button
-                      onClick={() => store.deleteChecklistItem(card.id, item.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-white/40 hover:text-red-400 transition-all"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add item..."
-                  value={newChecklistItem}
-                  onChange={e => setNewChecklistItem(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddChecklistItem()}
-                  className="flex-1"
-                />
-                <button 
-                  onClick={handleAddChecklistItem}
-                  className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
-                >
-                  Add
-                </button>
-              </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded border border-white/30" />
+                  )}
+                  <span className={`flex-1 text-sm ${item.completed ? 'line-through text-white/40' : 'text-white'}`}>
+                    {item.text}
+                  </span>
+                  <button
+                    onClick={() => isNew ? removePendingItem(item.id) : store.deleteChecklistItem(card.id, item.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded text-white/40 hover:text-red-400 transition-all"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </motion.div>
+              ))}
             </div>
-          )}
+
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add subtask..."
+                value={newChecklistItem}
+                onChange={e => setNewChecklistItem(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddChecklistItem()}
+                className="flex-1"
+              />
+              <button 
+                onClick={handleAddChecklistItem}
+                className="px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm transition-colors"
+              >
+                Add
+              </button>
+            </div>
+          </div>
         </div>
         <DialogFooter>
           {!isNew && (
