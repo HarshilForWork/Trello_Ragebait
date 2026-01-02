@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "exportedAt": "2026-01-03T00:00:00Z",
+  "boards": [
+    {
+      "name": "Project Alpha",
+      "position": 0,
+      "lists": [
+        {
+          "name": "To Do",
+          "position": 0,
+          "cards": [
+            {
+              "title": "Research competitors",
+              "description": "Analyze top 5 competitors in the market",
+              "position": 0,
+              "checklist": [
+                { "text": "Identify competitors", "completed": true, "position": 0 },
+                { "text": "Analyze features", "completed": true, "position": 1 },
+                { "text": "Compare pricing", "completed": false, "position": 2 },
+                { "text": "Write report", "completed": false, "position": 3 }
+              ]
+            },
+            {
+              "title": "Design system setup",
+              "description": "Create color palette and typography guidelines",
+              "position": 1,
+              "checklist": []
+            }
+          ]
+        },
+        {
+          "name": "In Progress",
+          "position": 1,
+          "cards": [
+            {
+              "title": "Build landing page",
+              "description": "Create responsive landing page with hero section",
+              "position": 0,
+              "checklist": [
+                { "text": "Header component", "completed": true, "position": 0 },
+                { "text": "Hero section", "completed": true, "position": 1 },
+                { "text": "Features section", "completed": false, "position": 2 },
+                { "text": "Footer", "completed": false, "position": 3 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Review",
+          "position": 2,
+          "cards": [
+            {
+              "title": "API documentation",
+              "description": "Review and approve API docs",
+              "position": 0,
+              "checklist": []
+            }
+          ]
+        },
+        {
+          "name": "Done",
+          "position": 3,
+          "cards": [
+            {
+              "title": "Project setup",
+              "description": "Initialize repository and CI/CD",
+              "position": 0,
+              "checklist": [
+                { "text": "Create GitHub repo", "completed": true, "position": 0 },
+                { "text": "Setup CI/CD", "completed": true, "position": 1 },
+                { "text": "Add README", "completed": true, "position": 2 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "title": "Quick Links",
+      "content": "Project Resources:\n- GitHub: https://github.com/example/project\n- Documentation: docs.example.com\n- Design Files: figma.com/file/example\n\nUseful Tools:\n- Deployment: vercel.com\n- Database: supabase.com"
+    },
+    {
+      "title": "Meeting Notes",
+      "content": "Sprint Planning - Jan 3rd\n\n1. Discussed feature priorities\n2. Assigned tasks to team members\n3. Set deadline for MVP: Jan 15th\n\nAction items:\n- Complete landing page by Friday\n- Review competitor analysis"
+    }
+  ]
+}
