@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { DndContext, DragOverlay, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { AuthProvider, useAuth } from '@/store/auth'
 import { StoreProvider, useStore } from '@/store'
+import { AuthModal } from '@/components/ui/auth-modal'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -19,7 +24,11 @@ import {
   Loader2,
   Image,
   Palette,
-  X
+  X,
+  User,
+  LogOut,
+  GripVertical,
+  ChevronRight
 } from 'lucide-react'
 
 // Preset wallpapers - beautiful high-quality images
@@ -35,23 +44,243 @@ const WALLPAPERS = [
   { id: 'abstract', url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=1920&q=80', label: 'Abstract' },
 ]
 
+// Sortable Card Component
+function SortableCard({ card, openCardModal }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: card.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-pointer hover:shadow-md transition-shadow group flex items-start gap-2"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="p-1 -ml-1 -mt-0.5 rounded text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="w-4 h-4" />
+      </button>
+      <div className="flex-1" onClick={() => openCardModal(card)}>
+        <h4 className="text-sm font-medium text-gray-800">{card.title}</h4>
+        {card.description && (
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{card.description}</p>
+        )}
+        {card.checklist?.length > 0 && (
+          <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
+            <Check className="w-3.5 h-3.5" />
+            <span className={card.checklist.every(i => i.completed) ? 'text-green-600' : ''}>
+              {card.checklist.filter(i => i.completed).length}/{card.checklist.length}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Sortable List Component
+function SortableList({ list, store, openCardModal }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: list.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  const cards = list.cards || []
+  const cardIds = cards.map(c => c.id)
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex-shrink-0 w-72 max-h-full flex flex-col bg-gray-100 rounded-xl shadow-lg"
+    >
+      {/* List header with drag handle */}
+      <div className="px-3 py-2.5 flex items-center gap-2">
+        <button
+          {...attributes}
+          {...listeners}
+          className="p-1 -ml-1 rounded text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <h3 className="font-semibold text-gray-800 text-sm flex-1">{list.name}</h3>
+        <button
+          onClick={() => store.deleteList(list.id)}
+          className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Cards with sortable context */}
+      <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-2">
+        <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+          {cards.map(card => (
+            <SortableCard key={card.id} card={card} openCardModal={openCardModal} />
+          ))}
+        </SortableContext>
+      </div>
+
+      {/* Add card button */}
+      <button 
+        onClick={() => openCardModal({ list_id: list.id })}
+        className="mx-2 mb-2 p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+      >
+        <Plus className="w-4 h-4" />
+        Add a card
+      </button>
+    </div>
+  )
+}
+
+// Board with Drag and Drop
+function BoardWithDnd({ board, store, openCardModal, setListModalOpen }) {
+  const [activeId, setActiveId] = useState(null)
+  const [activeType, setActiveType] = useState(null) // 'list' or 'card'
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const lists = board.lists || []
+  const listIds = lists.map(l => l.id)
+
+  // Find which list a card belongs to
+  const findListContainingCard = (cardId) => {
+    for (const list of lists) {
+      if (list.cards?.some(c => c.id === cardId)) {
+        return list
+      }
+    }
+    return null
+  }
+
+  const handleDragStart = (event) => {
+    const { active } = event
+    const isCard = lists.some(l => l.cards?.some(c => c.id === active.id))
+    setActiveId(active.id)
+    setActiveType(isCard ? 'card' : 'list')
+  }
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+    setActiveId(null)
+    setActiveType(null)
+
+    if (!over) return
+
+    if (activeType === 'list') {
+      // Reorder lists
+      const oldIndex = listIds.indexOf(active.id)
+      const newIndex = listIds.indexOf(over.id)
+      if (oldIndex !== newIndex) {
+        store.reorderLists(board.id, oldIndex, newIndex)
+      }
+    } else if (activeType === 'card') {
+      // Reorder cards
+      const sourceList = findListContainingCard(active.id)
+      const destList = findListContainingCard(over.id) || lists.find(l => l.id === over.id)
+      
+      if (sourceList && destList) {
+        const sourceCards = sourceList.cards || []
+        const destCards = destList.cards || []
+        
+        const oldIndex = sourceCards.findIndex(c => c.id === active.id)
+        let newIndex = destCards.findIndex(c => c.id === over.id)
+        
+        if (newIndex === -1) newIndex = destCards.length
+
+        store.reorderCards(sourceList.id, destList.id, oldIndex, newIndex)
+      }
+    }
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="flex gap-3 h-full pb-2">
+        <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
+          {lists.map(list => (
+            <SortableList 
+              key={list.id} 
+              list={list} 
+              store={store}
+              openCardModal={openCardModal} 
+            />
+          ))}
+        </SortableContext>
+
+        {/* Add list button */}
+        <motion.button
+          onClick={() => setListModalOpen(true)}
+          className="flex-shrink-0 w-72 h-fit p-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm border-2 border-dashed border-white/30 text-white/80 hover:text-white transition-all flex items-center gap-2 text-sm font-medium"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Plus className="w-4 h-4" />
+          Add list
+        </motion.button>
+      </div>
+    </DndContext>
+  )
+}
+
 // Main App Component
 function App() {
   return (
-    <StoreProvider>
-      <AppContent />
-    </StoreProvider>
+    <AuthProvider>
+      <StoreProvider>
+        <AppContent />
+      </StoreProvider>
+    </AuthProvider>
   )
 }
 
 function AppContent() {
   const store = useStore()
+  const auth = useAuth()
   const [notesOpen, setNotesOpen] = useState(false)
   const [boardModalOpen, setBoardModalOpen] = useState(false)
   const [listModalOpen, setListModalOpen] = useState(false)
   const [cardModalOpen, setCardModalOpen] = useState(false)
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [wallpaperModalOpen, setWallpaperModalOpen] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null })
   const [currentCard, setCurrentCard] = useState(null)
   const [currentNote, setCurrentNote] = useState(null)
@@ -101,13 +330,77 @@ function AppContent() {
     reader.onload = async (event) => {
       try {
         const data = JSON.parse(event.target.result)
-        if (data.boards || data.notes) {
-          // Simple import - just reload after import
-          alert('Import successful! Please refresh the page to see changes.')
-          // In a real app, you'd call store methods to import data
+        
+        if (!data.boards && !data.notes) {
+          alert('Invalid file format - no boards or notes found')
+          return
         }
+
+        // Check if user is authenticated
+        if (!auth.isAuthenticated) {
+          alert('Please sign in to import data')
+          return
+        }
+
+        let importedBoards = 0
+        let importedNotes = 0
+
+        // Import boards with their lists, cards, and checklist items
+        if (data.boards && Array.isArray(data.boards)) {
+          for (const board of data.boards) {
+            try {
+              // Create board
+              const newBoard = await store.createBoard(board.name)
+              if (!newBoard) continue
+              importedBoards++
+
+              // Create lists
+              if (board.lists && Array.isArray(board.lists)) {
+                for (const list of board.lists) {
+                  const newList = await store.createList(newBoard.id, list.name)
+                  if (!newList) continue
+
+                  // Create cards
+                  if (list.cards && Array.isArray(list.cards)) {
+                    for (const card of list.cards) {
+                      const newCard = await store.createCard(newList.id, card.title, card.description || '')
+                      if (!newCard) continue
+
+                      // Create checklist items
+                      if (card.checklist && Array.isArray(card.checklist)) {
+                        for (const item of card.checklist) {
+                          await store.addChecklistItem(newCard.id, item.text)
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            } catch (err) {
+              console.error('Error importing board:', err)
+            }
+          }
+        }
+
+        // Import notes
+        if (data.notes && Array.isArray(data.notes)) {
+          for (const note of data.notes) {
+            try {
+              await store.createNote(note.title, note.content || '')
+              importedNotes++
+            } catch (err) {
+              console.error('Error importing note:', err)
+            }
+          }
+        }
+
+        alert(`Import complete!\n${importedBoards} boards imported\n${importedNotes} notes imported`)
+        
+        // Reset file input
+        e.target.value = ''
       } catch (err) {
-        alert('Invalid file format')
+        console.error('Import error:', err)
+        alert('Error parsing file: ' + err.message)
       }
     }
     reader.readAsText(file)
@@ -280,6 +573,40 @@ function AppContent() {
           >
             <Download className="w-5 h-5" />
           </button>
+
+          {/* User Auth */}
+          <div className="ml-2 pl-2 border-l border-white/20">
+            {auth.isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 text-white text-sm transition-colors">
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                      <User className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="max-w-[120px] truncate">{auth.user?.email?.split('@')[0]}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel className="text-xs text-white/50 font-normal">
+                    {auth.user?.email}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => auth.signOut()}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white text-black text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <User className="w-4 h-4" />
+                Sign In
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -318,83 +645,13 @@ function AppContent() {
               </button>
             </motion.div>
           ) : (
-            /* Board view */
-            <div className="flex gap-3 h-full pb-2">
-              <AnimatePresence mode="popLayout">
-                {currentBoard.lists?.map((list, index) => (
-                  <motion.div
-                    key={list.id}
-                    className="flex-shrink-0 w-72 max-h-full flex flex-col bg-gray-100 rounded-xl shadow-lg"
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ delay: index * 0.05 }}
-                    layout
-                  >
-                    {/* List header */}
-                    <div className="px-3 py-2.5 flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-800 text-sm">{list.name}</h3>
-                      <button
-                        onClick={() => store.deleteList(list.id)}
-                        className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Cards */}
-                    <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-2">
-                      <AnimatePresence>
-                        {list.cards?.map(card => (
-                          <motion.div 
-                            key={card.id}
-                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-pointer hover:shadow-md transition-shadow group"
-                            onClick={() => openCardModal(card)}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            whileHover={{ y: -2 }}
-                          >
-                            <h4 className="text-sm font-medium text-gray-800">{card.title}</h4>
-                            {card.description && (
-                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{card.description}</p>
-                            )}
-                            {card.checklist?.length > 0 && (
-                              <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-                                <Check className="w-3.5 h-3.5" />
-                                <span className={card.checklist.every(i => i.completed) ? 'text-green-600' : ''}>
-                                  {card.checklist.filter(i => i.completed).length}/{card.checklist.length}
-                                </span>
-                              </div>
-                            )}
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Add card button */}
-                    <button 
-                      onClick={() => openCardModal({ list_id: list.id })}
-                      className="mx-2 mb-2 p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add a card
-                    </button>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {/* Add list button */}
-              <motion.button
-                onClick={() => setListModalOpen(true)}
-                className="flex-shrink-0 w-72 h-fit p-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm border-2 border-dashed border-white/30 text-white/80 hover:text-white transition-all flex items-center gap-2 text-sm font-medium"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Plus className="w-4 h-4" />
-                Add list
-              </motion.button>
-            </div>
+            /* Board view with drag-and-drop */
+            <BoardWithDnd 
+              board={currentBoard} 
+              store={store} 
+              openCardModal={openCardModal}
+              setListModalOpen={setListModalOpen}
+            />
           )}
         </div>
       </main>
@@ -571,6 +828,146 @@ function AppContent() {
         }}
         onCancel={() => setConfirmDialog({ open: false, message: '', onConfirm: null })}
       />
+
+      {/* Auth Modal */}
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+    </div>
+  )
+}
+
+// Recursive Checklist Tree for nested subtasks
+function ChecklistTree({ items, parentId, cardId, store, isNew, removePendingItem, level }) {
+  const [expandedItems, setExpandedItems] = useState(new Set())
+  const [addingSubItemFor, setAddingSubItemFor] = useState(null)
+  const [newSubItemText, setNewSubItemText] = useState('')
+
+  // Filter items by parent
+  const filteredItems = items.filter(item => item.parent_id === parentId)
+
+  const toggleExpand = (itemId) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev)
+      if (next.has(itemId)) {
+        next.delete(itemId)
+      } else {
+        next.add(itemId)
+      }
+      return next
+    })
+  }
+
+  const getChildren = (itemId) => items.filter(item => item.parent_id === itemId)
+
+  const handleAddSubItem = async (parentItemId) => {
+    if (!newSubItemText.trim()) return
+    await store.addChecklistItem(cardId, newSubItemText, parentItemId)
+    setNewSubItemText('')
+    setAddingSubItemFor(null)
+    // Auto-expand the parent
+    setExpandedItems(prev => new Set([...prev, parentItemId]))
+  }
+
+  if (filteredItems.length === 0) return null
+
+  return (
+    <div className="space-y-1">
+      {filteredItems.map(item => {
+        const children = getChildren(item.id)
+        const hasChildren = children.length > 0
+        const isExpanded = expandedItems.has(item.id)
+
+        return (
+          <div key={item.id}>
+            <motion.div
+              className="flex items-center gap-1 p-2 rounded-lg bg-white/5 group"
+              style={{ marginLeft: level * 16 }}
+              layout
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              {/* Expand/collapse button */}
+              <button
+                onClick={() => toggleExpand(item.id)}
+                className={`p-0.5 rounded transition-transform ${hasChildren ? 'text-white/40 hover:text-white' : 'invisible'}`}
+              >
+                <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+              </button>
+
+              {/* Checkbox */}
+              {!isNew ? (
+                <Checkbox
+                  checked={item.completed}
+                  onCheckedChange={() => store.toggleChecklistItem(cardId, item.id)}
+                />
+              ) : (
+                <div className="w-4 h-4 rounded border border-white/30" />
+              )}
+
+              {/* Text */}
+              <span className={`flex-1 text-sm ${item.completed ? 'line-through text-white/40' : 'text-white'}`}>
+                {item.text}
+              </span>
+
+              {/* Add sub-item button (only for existing cards) */}
+              {!isNew && (
+                <button
+                  onClick={() => setAddingSubItemFor(addingSubItemFor === item.id ? null : item.id)}
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded text-white/40 hover:text-white transition-all"
+                  title="Add sub-item"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {/* Delete button */}
+              <button
+                onClick={() => isNew ? removePendingItem(item.id) : store.deleteChecklistItem(cardId, item.id)}
+                className="opacity-0 group-hover:opacity-100 p-1 rounded text-white/40 hover:text-red-400 transition-all"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </motion.div>
+
+            {/* Add sub-item input */}
+            {addingSubItemFor === item.id && (
+              <motion.div 
+                className="flex gap-2 mt-1"
+                style={{ marginLeft: (level + 1) * 16 + 8 }}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+              >
+                <Input
+                  placeholder="Add sub-item..."
+                  value={newSubItemText}
+                  onChange={e => setNewSubItemText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddSubItem(item.id)}
+                  className="flex-1 h-8 text-sm"
+                  autoFocus
+                />
+                <button
+                  onClick={() => handleAddSubItem(item.id)}
+                  className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-white text-xs transition-colors"
+                >
+                  Add
+                </button>
+              </motion.div>
+            )}
+
+            {/* Render children recursively */}
+            {hasChildren && isExpanded && (
+              <ChecklistTree
+                items={items}
+                parentId={item.id}
+                cardId={cardId}
+                store={store}
+                isNew={isNew}
+                removePendingItem={removePendingItem}
+                level={level + 1}
+              />
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -684,7 +1081,7 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
             />
           </div>
 
-          {/* Checklist section - now available for both new and existing cards */}
+          {/* Checklist section with nested subtasks */}
           <div>
             <label className="text-xs font-medium text-white/50 uppercase mb-2 block">Subtasks</label>
             
@@ -700,34 +1097,16 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
               </div>
             )}
 
-            <div className="space-y-1.5 mb-3 max-h-40 overflow-y-auto">
-              {checklist.map(item => (
-                <motion.div
-                  key={item.id}
-                  className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group"
-                  layout
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  {!isNew ? (
-                    <Checkbox
-                      checked={item.completed}
-                      onCheckedChange={() => store.toggleChecklistItem(card.id, item.id)}
-                    />
-                  ) : (
-                    <div className="w-4 h-4 rounded border border-white/30" />
-                  )}
-                  <span className={`flex-1 text-sm ${item.completed ? 'line-through text-white/40' : 'text-white'}`}>
-                    {item.text}
-                  </span>
-                  <button
-                    onClick={() => isNew ? removePendingItem(item.id) : store.deleteChecklistItem(card.id, item.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded text-white/40 hover:text-red-400 transition-all"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </motion.div>
-              ))}
+            <div className="space-y-1 mb-3 max-h-60 overflow-y-auto">
+              <ChecklistTree 
+                items={checklist}
+                parentId={null}
+                cardId={card?.id}
+                store={store}
+                isNew={isNew}
+                removePendingItem={removePendingItem}
+                level={0}
+              />
             </div>
 
             <div className="flex gap-2">

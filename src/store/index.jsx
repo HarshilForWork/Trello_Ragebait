@@ -88,12 +88,40 @@ export function StoreProvider({ children }) {
     loadData()
   }, [loadData])
 
+  // Listen for auth changes to reload data
+  useEffect(() => {
+    if (!isConfigured) return
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          // Clear data on sign out
+          if (event === 'SIGNED_OUT') {
+            setBoards([])
+            setNotes([])
+            setActiveBoard(null)
+          } else {
+            // Reload data on sign in
+            loadData()
+          }
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [loadData])
+
   // Board operations
   const createBoard = async (name) => {
     if (!isConfigured) return null
+    
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Not authenticated')
+    
     const { data, error } = await supabase
       .from('boards')
-      .insert([{ name, position: boards.length }])
+      .insert([{ name, position: boards.length, user_id: user.id }])
       .select()
       .single()
 
@@ -140,6 +168,32 @@ export function StoreProvider({ children }) {
       ...b,
       lists: (b.lists || []).filter(l => l.id !== listId)
     })))
+  }
+
+  const reorderLists = async (boardId, oldIndex, newIndex) => {
+    if (!isConfigured || oldIndex === newIndex) return
+
+    // Update local state first for instant feedback
+    setBoards(prev => prev.map(board => {
+      if (board.id !== boardId) return board
+      const lists = [...(board.lists || [])]
+      const [moved] = lists.splice(oldIndex, 1)
+      lists.splice(newIndex, 0, moved)
+      return { ...board, lists }
+    }))
+
+    // Update positions in database
+    const board = boards.find(b => b.id === boardId)
+    if (!board) return
+
+    const lists = [...(board.lists || [])]
+    const [moved] = lists.splice(oldIndex, 1)
+    lists.splice(newIndex, 0, moved)
+
+    // Update all positions
+    for (let i = 0; i < lists.length; i++) {
+      await supabase.from('lists').update({ position: i }).eq('id', lists[i].id)
+    }
   }
 
   // Card operations
@@ -234,14 +288,17 @@ export function StoreProvider({ children }) {
   }
 
   // Checklist operations
-  const addChecklistItem = async (cardId, text) => {
+  const addChecklistItem = async (cardId, text, parentId = null) => {
     if (!isConfigured) return null
     const card = boards.flatMap(b => b.lists?.flatMap(l => l.cards || []) || []).find(c => c.id === cardId)
-    const position = card?.checklist?.length || 0
+    
+    // Get position based on siblings (same parent)
+    const siblings = (card?.checklist || []).filter(i => i.parent_id === parentId)
+    const position = siblings.length
 
     const { data, error } = await supabase
       .from('checklist_items')
-      .insert([{ card_id: cardId, text, position, completed: false }])
+      .insert([{ card_id: cardId, text, position, completed: false, parent_id: parentId }])
       .select()
       .single()
 
@@ -299,9 +356,14 @@ export function StoreProvider({ children }) {
   // Notes operations
   const createNote = async (title, content) => {
     if (!isConfigured) return null
+    
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Not authenticated')
+    
     const { data, error } = await supabase
       .from('notes')
-      .insert([{ title, content }])
+      .insert([{ title, content, user_id: user.id }])
       .select()
       .single()
 
@@ -322,6 +384,70 @@ export function StoreProvider({ children }) {
     setNotes(prev => prev.filter(n => n.id !== noteId))
   }
 
+  // Reorder cards within a list or move to different list
+  const reorderCards = async (sourceListId, destListId, oldIndex, newIndex) => {
+    if (!isConfigured) return
+
+    // Find the source list and card
+    let sourceBoard = null
+    let sourceList = null
+    for (const board of boards) {
+      const list = board.lists?.find(l => l.id === sourceListId)
+      if (list) {
+        sourceBoard = board
+        sourceList = list
+        break
+      }
+    }
+    if (!sourceList) return
+
+    const card = sourceList.cards[oldIndex]
+    if (!card) return
+
+    // Update local state immediately
+    setBoards(prev => prev.map(board => {
+      if (board.id !== sourceBoard.id) return board
+      
+      return {
+        ...board,
+        lists: board.lists.map(list => {
+          if (list.id === sourceListId && list.id === destListId) {
+            // Same list reorder
+            const cards = [...list.cards]
+            const [moved] = cards.splice(oldIndex, 1)
+            cards.splice(newIndex, 0, moved)
+            return { ...list, cards }
+          } else if (list.id === sourceListId) {
+            // Remove from source
+            return { ...list, cards: list.cards.filter((_, i) => i !== oldIndex) }
+          } else if (list.id === destListId) {
+            // Add to dest
+            const cards = [...list.cards]
+            cards.splice(newIndex, 0, { ...card, list_id: destListId })
+            return { ...list, cards }
+          }
+          return list
+        })
+      }
+    }))
+
+    // Update database
+    await supabase
+      .from('cards')
+      .update({ list_id: destListId, position: newIndex })
+      .eq('id', card.id)
+
+    // Update positions of other cards in affected lists
+    if (sourceListId === destListId) {
+      const cards = [...sourceList.cards]
+      const [moved] = cards.splice(oldIndex, 1)
+      cards.splice(newIndex, 0, moved)
+      for (let i = 0; i < cards.length; i++) {
+        await supabase.from('cards').update({ position: i }).eq('id', cards[i].id)
+      }
+    }
+  }
+
   const value = {
     boards,
     notes,
@@ -335,10 +461,12 @@ export function StoreProvider({ children }) {
     deleteBoard,
     createList,
     deleteList,
+    reorderLists,
     createCard,
     updateCard,
     deleteCard,
     moveCard,
+    reorderCards,
     addChecklistItem,
     toggleChecklistItem,
     deleteChecklistItem,

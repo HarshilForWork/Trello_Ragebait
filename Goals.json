@@ -1,0 +1,228 @@
+{
+  "version": "1.0",
+  "exportedAt": "2026-01-03T00:00:00Z",
+  "boards": [
+    {
+      "name": "Skill Up — Roadmap",
+      "position": 0,
+      "lists": [
+        {
+          "name": "DSA",
+          "position": 0,
+          "cards": []
+        },
+        {
+          "name": "MLOps",
+          "position": 1,
+          "cards": []
+        },
+        {
+          "name": "Data Engineering",
+          "position": 2,
+          "cards": [
+            {
+              "title": "Course Overview & Setup",
+              "description": "Goal: Setup Python, VS Code, Git & Linux.\n\nSupplement:\nGit & GitHub Crash Course:\nhttps://www.youtube.com/watch?v=RGOj5yH7evk",
+              "position": 0,
+              "checklist": [
+                { "text": "Install Python", "completed": false, "position": 0 },
+                { "text": "Install VS Code", "completed": false, "position": 1 },
+                { "text": "Create virtual environment", "completed": false, "position": 2 },
+                { "text": "Setup logging", "completed": false, "position": 3 },
+                { "text": "Practice Linux commands", "completed": false, "position": 4 },
+                { "text": "Install SQLite", "completed": false, "position": 5 },
+                { "text": "Install Git", "completed": false, "position": 6 },
+                { "text": "Push first repo", "completed": false, "position": 7 }
+              ]
+            },
+            {
+              "title": "MySQL & SQL Foundations",
+              "description": "Goal: Build strong SQL fundamentals.\n\nSupplement:\nAdvanced SQL (CTE + Window Functions):\nhttps://www.youtube.com/watch?v=dqbowgdPfmE",
+              "position": 1,
+              "checklist": [
+                { "text": "DDL Commands", "completed": false, "position": 0 },
+                { "text": "CRUD Queries", "completed": false, "position": 1 },
+                { "text": "Primary & Foreign Keys", "completed": false, "position": 2 },
+                { "text": "Joins", "completed": false, "position": 3 },
+                { "text": "Indexes", "completed": false, "position": 4 },
+                { "text": "CTEs", "completed": false, "position": 5 },
+                { "text": "Window Functions", "completed": false, "position": 6 }
+              ]
+            },
+            {
+              "title": "Python Programming",
+              "description": "Goal: Write ETL-ready Python code.\n\nSupplement:\nPandas Crash Course:\nhttps://www.youtube.com/watch?v=vmEHCJofslg",
+              "position": 2,
+              "checklist": [
+                { "text": "Python basics & loops", "completed": false, "position": 0 },
+                { "text": "Functions", "completed": false, "position": 1 },
+                { "text": "OOP", "completed": false, "position": 2 },
+                { "text": "Exception Handling", "completed": false, "position": 3 },
+                { "text": "Logging", "completed": false, "position": 4 },
+                { "text": "Pandas", "completed": false, "position": 5 },
+                { "text": "NumPy", "completed": false, "position": 6 },
+                { "text": "SQLite with Python", "completed": false, "position": 7 }
+              ]
+            },
+            {
+              "title": "Big Data Concepts",
+              "description": "Goal: Understand core data engineering concepts.\n\nSupplement:\nDimensional Modeling:\nhttps://www.youtube.com/watch?v=Gl9-fr95HOU",
+              "position": 3,
+              "checklist": [
+                { "text": "What is Big Data?", "completed": false, "position": 0 },
+                { "text": "5 Vs of Big Data", "completed": false, "position": 1 },
+                { "text": "ETL vs ELT", "completed": false, "position": 2 },
+                { "text": "Database vs Data Warehouse vs Data Lake", "completed": false, "position": 3 },
+                { "text": "Star Schema", "completed": false, "position": 4 },
+                { "text": "Fact & Dimension Tables", "completed": false, "position": 5 },
+                { "text": "Medallion Architecture", "completed": false, "position": 6 }
+              ]
+            },
+            {
+              "title": "Hadoop & HDFS",
+              "description": "Goal: Learn distributed storage concepts.",
+              "position": 4,
+              "checklist": [
+                { "text": "Hadoop Ecosystem", "completed": false, "position": 0 },
+                { "text": "HDFS Architecture", "completed": false, "position": 1 },
+                { "text": "Replication", "completed": false, "position": 2 },
+                { "text": "Fault Tolerance", "completed": false, "position": 3 },
+                { "text": "HDFS CLI", "completed": false, "position": 4 },
+                { "text": "Cluster Basics", "completed": false, "position": 5 }
+              ]
+            },
+            {
+              "title": "MapReduce & YARN",
+              "description": "Goal: Understand distributed batch processing.",
+              "position": 5,
+              "checklist": [
+                { "text": "MapReduce Basics", "completed": false, "position": 0 },
+                { "text": "Write MR Jobs", "completed": false, "position": 1 },
+                { "text": "YARN Scheduling", "completed": false, "position": 2 },
+                { "text": "Cluster Execution", "completed": false, "position": 3 }
+              ]
+            },
+            {
+              "title": "Apache Spark",
+              "description": "Goal: Build Spark batch data pipelines.\n\nSupplement:\nSpark Structured Streaming:\nhttps://www.youtube.com/watch?v=IVFeaWHwH2w",
+              "position": 6,
+              "checklist": [
+                { "text": "RDDs", "completed": false, "position": 0 },
+                { "text": "DataFrames", "completed": false, "position": 1 },
+                { "text": "Spark SQL", "completed": false, "position": 2 },
+                { "text": "Transformations & Actions", "completed": false, "position": 3 },
+                { "text": "Joins & Window Functions", "completed": false, "position": 4 },
+                { "text": "Caching", "completed": false, "position": 5 },
+                { "text": "Spark UI", "completed": false, "position": 6 },
+                { "text": "Spark Optimization", "completed": false, "position": 7 }
+              ]
+            },
+            {
+              "title": "Kafka & Streaming",
+              "description": "Goal: Learn real-time data pipelines.\n\nSupplement:\nKafka Basics:\nhttps://www.youtube.com/watch?v=PHsC_t0j1dU",
+              "position": 7,
+              "checklist": [
+                { "text": "Kafka basics", "completed": false, "position": 0 },
+                { "text": "Topics & Partitions", "completed": false, "position": 1 },
+                { "text": "Producer", "completed": false, "position": 2 },
+                { "text": "Consumer", "completed": false, "position": 3 },
+                { "text": "Streaming pipelines", "completed": false, "position": 4 }
+              ]
+            },
+            {
+              "title": "Docker & Airflow",
+              "description": "Goal: Orchestrate and deploy data pipelines.\n\nSupplement:\nGreat Expectations:\nhttps://www.youtube.com/watch?v=oxOj30rl_xs",
+              "position": 8,
+              "checklist": [
+                { "text": "Docker images", "completed": false, "position": 0 },
+                { "text": "Docker Compose", "completed": false, "position": 1 },
+                { "text": "Push images", "completed": false, "position": 2 },
+                { "text": "Install Airflow", "completed": false, "position": 3 },
+                { "text": "Create DAGs", "completed": false, "position": 4 },
+                { "text": "Schedule Pipelines", "completed": false, "position": 5 },
+                { "text": "Deploy", "completed": false, "position": 6 }
+              ]
+            },
+            {
+              "title": "Databricks & Cloud",
+              "description": "Goal: Build & run Spark workloads in cloud.",
+              "position": 9,
+              "checklist": [
+                { "text": "Create Workspace", "completed": false, "position": 0 },
+                { "text": "Upload Data", "completed": false, "position": 1 },
+                { "text": "Create Notebooks", "completed": false, "position": 2 },
+                { "text": "Build Pipelines", "completed": false, "position": 3 }
+              ]
+            },
+            {
+              "title": "PROJECT: End-to-End E-Commerce ETL",
+              "description": "Goal: Build a production-style ETL pipeline.\n\nTools: Python, SQL, Spark, Airflow, Docker, Databricks",
+              "position": 10,
+              "checklist": [
+                { "text": "Design Pipeline", "completed": false, "position": 0 },
+                { "text": "Extract Data", "completed": false, "position": 1 },
+                { "text": "Transform Data", "completed": false, "position": 2 },
+                { "text": "Load Data", "completed": false, "position": 3 },
+                { "text": "Add Logging", "completed": false, "position": 4 },
+                { "text": "Schedule in Airflow", "completed": false, "position": 5 },
+                { "text": "Dockerize Pipeline", "completed": false, "position": 6 },
+                { "text": "Validate Data Quality", "completed": false, "position": 7 },
+                { "text": "Write README + Architecture Doc", "completed": false, "position": 8 }
+              ]
+            },
+            {
+              "title": "PROJECT: Real-Time Analytics System",
+              "description": "Goal: Build streaming analytics.\n\nTools: Kafka, Spark Streaming",
+              "position": 11,
+              "checklist": [
+                { "text": "Setup Kafka Topic", "completed": false, "position": 0 },
+                { "text": "Create Producer", "completed": false, "position": 1 },
+                { "text": "Create Consumer", "completed": false, "position": 2 },
+                { "text": "Spark Streaming Job", "completed": false, "position": 3 },
+                { "text": "Store Events", "completed": false, "position": 4 },
+                { "text": "Create KPI Dashboard", "completed": false, "position": 5 },
+                { "text": "Document Project", "completed": false, "position": 6 }
+              ]
+            },
+            {
+              "title": "PROJECT: Data Warehouse + Dashboard",
+              "description": "Goal: Build analytical warehouse & BI dashboards.\n\nChoose:\nBigQuery — https://www.youtube.com/watch?v=MYAfyPlVVak\nSnowflake — https://www.youtube.com/watch?v=nV1n06MAYM0\nPower BI — https://www.youtube.com/watch?v=6cV3OwFrOkk\nTableau — https://www.youtube.com/watch?v=aHaOIvR00So\ndbt — https://www.youtube.com/watch?v=toSAAgLUHuk",
+              "position": 12,
+              "checklist": [
+                { "text": "Choose Warehouse", "completed": false, "position": 0 },
+                { "text": "Load Data", "completed": false, "position": 1 },
+                { "text": "Create Fact Tables", "completed": false, "position": 2 },
+                { "text": "Create Dimension Tables", "completed": false, "position": 3 },
+                { "text": "Build Serving Layer", "completed": false, "position": 4 },
+                { "text": "Create Dashboard", "completed": false, "position": 5 },
+                { "text": "Define KPIs", "completed": false, "position": 6 },
+                { "text": "Write README + Add Screenshots", "completed": false, "position": 7 }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Daily Backlog",
+          "position": 3,
+          "cards": []
+        },
+        {
+          "name": "Today's Task",
+          "position": 4,
+          "cards": []
+        },
+        {
+          "name": "Doing",
+          "position": 5,
+          "cards": []
+        },
+        {
+          "name": "Done",
+          "position": 6,
+          "cards": []
+        }
+      ]
+    }
+  ],
+  "notes": []
+}
