@@ -61,7 +61,7 @@
 }
 
 .glass-header {
-  @apply bg-black/50 backdrop-blur-xl;
+  @apply bg-black/70 backdrop-blur-md border-b border-white/10;
 }
 
 /* Custom scrollbar */
