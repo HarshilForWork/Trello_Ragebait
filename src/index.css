@@ -345,12 +345,28 @@
 .overflow-x-auto {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+}
+
+/* Prevent page scroll when dragging */
+body.dragging {
+  overflow: hidden !important;
+  touch-action: none !important;
+  -webkit-overflow-scrolling: auto !important;
 }
 
 /* Prevent bounce scrolling during drag */
 .overflow-x-auto.dragging {
   overflow-x: hidden !important;
   touch-action: none !important;
+}
+
+/* Prevent scroll on drag handles */
+.cursor-grab,
+.cursor-grabbing {
+  touch-action: none !important;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Smooth scrollbar */

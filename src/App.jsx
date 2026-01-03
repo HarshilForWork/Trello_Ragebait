@@ -71,12 +71,14 @@ function SortableCard({ card, openCardModal }) {
       ref={setNodeRef}
       style={style}
       className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow group flex items-start gap-2 touch-manipulation"
+      onTouchStart={(e) => e.stopPropagation()}
     >
       <button
         {...attributes}
         {...listeners}
         className="p-1.5 -ml-1 -mt-0.5 rounded text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-manipulation flex-shrink-0"
         aria-label="Drag card"
+        style={{ touchAction: 'none' }}
       >
         <GripVertical className="w-5 h-5" />
       </button>
@@ -123,6 +125,7 @@ function SortableList({ list, store, openCardModal }) {
       ref={setNodeRef}
       style={style}
       className="flex-shrink-0 w-72 sm:w-80 max-h-full flex flex-col bg-gray-100 rounded-xl shadow-lg touch-manipulation"
+      onTouchStart={(e) => e.stopPropagation()}
     >
       {/* List header with drag handle */}
       <div className="px-3 py-2.5 flex items-center gap-2">
@@ -131,6 +134,7 @@ function SortableList({ list, store, openCardModal }) {
           {...listeners}
           className="p-2 -ml-1 rounded text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-manipulation flex-shrink-0"
           aria-label="Drag list"
+          style={{ touchAction: 'none' }}
         >
           <GripVertical className="w-5 h-5" />
         </button>
@@ -173,8 +177,8 @@ function BoardWithDnd({ board, store, openCardModal, setListModalOpen }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        delay: 100,
-        tolerance: 5,
+        delay: 50,
+        tolerance: 3,
       },
     }),
     useSensor(KeyboardSensor, {
