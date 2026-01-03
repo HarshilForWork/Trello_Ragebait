@@ -43,13 +43,15 @@ export default function KanbanWidget({ store }) {
   return (
     <div className="h-full flex flex-col bg-zinc-900/50 rounded-xl border border-white/10 overflow-hidden">
       {/* Widget Header */}
-      <div className="widget-drag-handle flex items-center gap-2 p-3 border-b border-white/10 cursor-move bg-zinc-800/50">
-        <GripVertical className="w-4 h-4 text-white/40" />
+      <div className="flex items-center gap-2 p-3 border-b border-white/10 bg-zinc-800/50">
+        <button className="widget-drag-handle p-1 cursor-move touch-manipulation hidden lg:block" aria-label="Drag widget">
+          <GripVertical className="w-4 h-4 text-white/40" />
+        </button>
         <h3 className="font-semibold text-white text-sm">Quick View</h3>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-3">
+      <div className="flex-1 overflow-auto p-3 no-drag">
         {/* Board Selector */}
         <select
           value={selectedBoardId || ''}
@@ -75,8 +77,7 @@ export default function KanbanWidget({ store }) {
                   {/* List Header */}
                   <div 
                     onClick={() => toggleList(list.id)}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    className="flex items-center justify-between p-2 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+                    className="flex items-center justify-between p-2 bg-white/5 cursor-pointer hover:bg-white/10 active:bg-white/15 transition-colors touch-manipulation"
                   >
                     <div className="flex items-center gap-2 flex-1">
                       {isExpanded ? (
@@ -93,11 +94,10 @@ export default function KanbanWidget({ store }) {
                         setIsAddingTask(list.id)
                         setExpandedLists(prev => new Set([...prev, list.id]))
                       }}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                      className="p-1.5 rounded hover:bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors touch-manipulation"
                       title="Add task"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
 

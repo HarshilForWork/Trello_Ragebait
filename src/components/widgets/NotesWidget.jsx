@@ -24,9 +24,11 @@ export default function NotesWidget({ store }) {
   return (
     <div className="h-full flex flex-col bg-zinc-900/50 rounded-xl border border-white/10 overflow-hidden">
       {/* Widget Header */}
-      <div className="widget-drag-handle flex items-center justify-between p-3 border-b border-white/10 cursor-move bg-zinc-800/50">
+      <div className="flex items-center justify-between p-3 border-b border-white/10 bg-zinc-800/50">
         <div className="flex items-center gap-2">
-          <GripVertical className="w-4 h-4 text-white/40" />
+          <button className="widget-drag-handle p-1 cursor-move touch-manipulation hidden lg:block" aria-label="Drag widget">
+            <GripVertical className="w-4 h-4 text-white/40" />
+          </button>
           <h3 className="font-semibold text-white text-sm">Quick Notes</h3>
         </div>
         <button
@@ -39,7 +41,7 @@ export default function NotesWidget({ store }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-3 space-y-2">
+      <div className="flex-1 overflow-auto p-3 space-y-2 no-drag">
         {/* Add Note Form */}
         <AnimatePresence>
           {isAdding && (

@@ -81,11 +81,11 @@ export default function HelpWidget({ onClose }) {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-zinc-900 rounded-2xl border border-white/10 w-full max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl"
+        className="bg-zinc-900 rounded-2xl border border-white/10 w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/20 rounded-lg">
               <HelpCircle className="w-5 h-5 text-blue-400" />
@@ -104,7 +104,7 @@ export default function HelpWidget({ onClose }) {
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[60vh] p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Features */}
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-white/70 flex items-center gap-2">
@@ -203,10 +203,13 @@ export default function HelpWidget({ onClose }) {
         <div className="p-4 border-t border-white/10 bg-zinc-800/50">
           <button
             onClick={onClose}
-            className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-medium transition-colors"
+            className="w-full py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-medium transition-colors mb-3"
           >
             Got it, let's go!
           </button>
+          <p className="text-[10px] text-center text-white/30">
+            This website was made out of love and care for the LOML ❤️
+          </p>
         </div>
       </motion.div>
     </motion.div>

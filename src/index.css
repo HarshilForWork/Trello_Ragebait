@@ -129,6 +129,12 @@
 .react-grid-item {
   transition: all 200ms ease;
   transition-property: left, top, width, height;
+  touch-action: none;
+}
+
+.react-grid-item > * {
+  pointer-events: auto;
+  touch-action: auto;
 }
 
 .react-grid-item.resizing {
@@ -140,6 +146,39 @@
   transition: none;
   z-index: 100;
   opacity: 0.8;
+}
+
+/* Prevent dragging from non-handle areas */
+.react-grid-item .no-drag,
+.react-grid-item .no-drag * {
+  touch-action: auto !important;
+}
+
+.widget-drag-handle {
+  touch-action: none !important;
+  cursor: move;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Force disable all drag on mobile/tablet */
+@media (max-width: 768px) {
+  .react-grid-item {
+    touch-action: auto !important;
+  }
+  
+  .react-draggable {
+    touch-action: auto !important;
+    -webkit-user-drag: none !important;
+  }
+  
+  .widget-drag-handle {
+    display: none !important;
+  }
+  
+  .react-grid-item > .react-draggable {
+    transform: none !important;
+  }
 }
 
 .react-grid-item .react-resizable-handle {
@@ -302,6 +341,37 @@
   }
 }
 
+/* Kanban board horizontal scroll improvements */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent bounce scrolling during drag */
+.overflow-x-auto.dragging {
+  overflow-x: hidden !important;
+  touch-action: none !important;
+}
+
+/* Smooth scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 /* Touch device optimizations */
 @media (hover: none) and (pointer: coarse) {
   /* Larger touch targets */
@@ -338,6 +408,22 @@
   /* Prevent zoom on double-tap */
   * {
     touch-action: manipulation;
+  }
+
+  /* Enable smooth horizontal scrolling */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+  }
+
+  /* Kanban board horizontal scroll improvements */
+  .flex.gap-3 {
+    scroll-snap-type: x proximity;
+  }
+
+  .flex-shrink-0 {
+    scroll-snap-align: start;
   }
 }
 

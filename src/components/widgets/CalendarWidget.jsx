@@ -98,23 +98,21 @@ function CustomCalendar({ value, onChange, tileContent }) {
   return (
     <div className="w-full">
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-2" onTouchStart={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-between mb-2">
         <button
           onClick={prevMonth}
-          onTouchStart={(e) => e.stopPropagation()}
-          className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors touch-manipulation"
         >
-          <ChevronLeft className="w-3.5 h-3.5" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
         <h3 className="text-white font-semibold text-sm">
           {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
         </h3>
         <button
           onClick={nextMonth}
-          onTouchStart={(e) => e.stopPropagation()}
-          className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors touch-manipulation"
         >
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -133,11 +131,16 @@ function CustomCalendar({ value, onChange, tileContent }) {
           <button
             key={index}
             onClick={() => onChange(item.date)}
+            onTouchEnd={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onChange(item.date)
+            }}
             className={`
               aspect-square p-0.5 rounded text-xs flex flex-col items-center justify-center
-              transition-colors relative
+              transition-colors relative touch-manipulation cursor-pointer
               ${item.isCurrentMonth ? 'text-white' : 'text-white/30'}
-              ${isSelected(item.date) ? 'bg-blue-500 text-white' : 'hover:bg-white/10'}
+              ${isSelected(item.date) ? 'bg-blue-500 text-white' : 'hover:bg-white/10 active:bg-white/20'}
               ${isToday(item.date) && !isSelected(item.date) ? 'bg-white/10' : ''}
             `}
           >
@@ -359,18 +362,19 @@ export default function CalendarWidget({ store }) {
   return (
     <div className="h-full flex flex-col bg-zinc-900/50 rounded-xl border border-white/10 overflow-hidden">
       {/* Widget Header */}
-      <div className="widget-drag-handle flex items-center justify-between p-3 border-b border-white/10 cursor-move bg-zinc-800/50">
+      <div className="flex items-center justify-between p-3 border-b border-white/10 bg-zinc-800/50">
         <div className="flex items-center gap-2">
-          <GripVertical className="w-4 h-4 text-white/40" />
+          <button className="widget-drag-handle p-1 cursor-move touch-manipulation hidden lg:block" aria-label="Drag widget">
+            <GripVertical className="w-4 h-4 text-white/40" />
+          </button>
           <h3 className="font-semibold text-white text-sm">Calendar</h3>
         </div>
         
-        <div className="flex items-center gap-2" onTouchStart={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2">
           {/* Add Task Button */}
           <button
             onClick={openAddTask}
-            onTouchStart={(e) => e.stopPropagation()}
-            className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+            className="p-2 rounded hover:bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors touch-manipulation"
             title="Add task"
           >
             <Plus className="w-4 h-4" />
@@ -379,8 +383,7 @@ export default function CalendarWidget({ store }) {
           {/* View Switcher */}
           <button
             onClick={() => cycleView('prev')}
-            onTouchStart={(e) => e.stopPropagation()}
-            className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+            className="p-2 rounded hover:bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors touch-manipulation"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -389,8 +392,7 @@ export default function CalendarWidget({ store }) {
           </span>
           <button
             onClick={() => cycleView('next')}
-            onTouchStart={(e) => e.stopPropagation()}
-            className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+            className="p-2 rounded hover:bg-white/10 active:bg-white/20 text-white/60 hover:text-white transition-colors touch-manipulation"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -398,7 +400,7 @@ export default function CalendarWidget({ store }) {
       </div>
 
       {/* Calendar Content */}
-      <div className="flex-1 overflow-auto p-3">
+      <div className="flex-1 overflow-auto p-3 no-drag">
         {/* Add Task Form */}
         <AnimatePresence>
           {isAddingTask && (

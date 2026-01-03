@@ -146,9 +146,11 @@ export default function ProgressWidget({ store }) {
   return (
     <div className="h-full flex flex-col bg-zinc-900/50 rounded-xl border border-white/10 overflow-hidden">
       {/* Widget Header */}
-      <div className="widget-drag-handle flex items-center justify-between p-3 border-b border-white/10 cursor-move bg-zinc-800/50">
+      <div className="flex items-center justify-between p-3 border-b border-white/10 bg-zinc-800/50">
         <div className="flex items-center gap-2">
-          <GripVertical className="w-4 h-4 text-white/40" />
+          <button className="widget-drag-handle p-1 cursor-move touch-manipulation hidden lg:block" aria-label="Drag widget">
+            <GripVertical className="w-4 h-4 text-white/40" />
+          </button>
           <h3 className="font-semibold text-white text-sm">Progress</h3>
         </div>
 
@@ -175,7 +177,7 @@ export default function ProgressWidget({ store }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+      <div className="flex-1 overflow-auto p-4 space-y-4 no-drag">
         {/* Progress Bar */}
         <div>
           <div className="flex items-center justify-between mb-2">

@@ -70,16 +70,17 @@ function SortableCard({ card, openCardModal }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-pointer hover:shadow-md transition-shadow group flex items-start gap-2"
+      className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 hover:shadow-md transition-shadow group flex items-start gap-2 touch-manipulation"
     >
       <button
         {...attributes}
         {...listeners}
-        className="p-1 -ml-1 -mt-0.5 rounded text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing"
+        className="p-1.5 -ml-1 -mt-0.5 rounded text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-manipulation flex-shrink-0"
+        aria-label="Drag card"
       >
-        <GripVertical className="w-4 h-4" />
+        <GripVertical className="w-5 h-5" />
       </button>
-      <div className="flex-1" onClick={() => openCardModal(card)}>
+      <div className="flex-1 cursor-pointer" onClick={() => openCardModal(card)}>
         <h4 className="text-sm font-medium text-gray-800">{card.title}</h4>
         {card.description && (
           <p className="text-xs text-gray-500 mt-1 line-clamp-2">{card.description}</p>
@@ -121,21 +122,22 @@ function SortableList({ list, store, openCardModal }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex-shrink-0 w-72 max-h-full flex flex-col bg-gray-100 rounded-xl shadow-lg"
+      className="flex-shrink-0 w-72 sm:w-80 max-h-full flex flex-col bg-gray-100 rounded-xl shadow-lg touch-manipulation"
     >
       {/* List header with drag handle */}
       <div className="px-3 py-2.5 flex items-center gap-2">
         <button
           {...attributes}
           {...listeners}
-          className="p-1 -ml-1 rounded text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing"
+          className="p-2 -ml-1 rounded text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-manipulation flex-shrink-0"
+          aria-label="Drag list"
         >
-          <GripVertical className="w-4 h-4" />
+          <GripVertical className="w-5 h-5" />
         </button>
         <h3 className="font-semibold text-gray-800 text-sm flex-1">{list.name}</h3>
         <button
           onClick={() => store.deleteList(list.id)}
-          className="p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+          className="p-2 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors touch-manipulation"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -166,11 +168,13 @@ function SortableList({ list, store, openCardModal }) {
 function BoardWithDnd({ board, store, openCardModal, setListModalOpen }) {
   const [activeId, setActiveId] = useState(null)
   const [activeType, setActiveType] = useState(null) // 'list' or 'card'
+  const scrollContainerRef = useRef(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        delay: 100,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -196,12 +200,26 @@ function BoardWithDnd({ board, store, openCardModal, setListModalOpen }) {
     const isCard = lists.some(l => l.cards?.some(c => c.id === active.id))
     setActiveId(active.id)
     setActiveType(isCard ? 'card' : 'list')
+    
+    // Prevent scrolling during drag on mobile/tablet
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.overflowX = 'hidden'
+      scrollContainerRef.current.style.touchAction = 'none'
+      document.body.style.overflow = 'hidden'
+    }
   }
 
   const handleDragEnd = (event) => {
     const { active, over } = event
     setActiveId(null)
     setActiveType(null)
+    
+    // Re-enable scrolling
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.overflowX = 'auto'
+      scrollContainerRef.current.style.touchAction = 'pan-x pan-y'
+      document.body.style.overflow = ''
+    }
 
     if (!over) return
 
@@ -238,7 +256,7 @@ function BoardWithDnd({ board, store, openCardModal, setListModalOpen }) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-3 h-full pb-2">
+      <div ref={scrollContainerRef} className="flex gap-3 h-full pb-2 min-w-min overflow-x-auto scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch' }}>
         <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
           {lists.map(list => (
             <SortableList 
@@ -663,7 +681,7 @@ function AppContent() {
           <Dashboard store={store} />
         ) : (
           /* Kanban View */
-          <div className="h-full p-4 overflow-x-auto">
+          <div className="h-full p-2 sm:p-4 overflow-x-auto overflow-y-hidden">
             {!currentBoard ? (
               /* Empty state */
               <motion.div 
