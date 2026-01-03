@@ -538,7 +538,7 @@ function AppContent() {
         <div className="flex items-center gap-3">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Vaishu Organizer" className="w-7 h-7 rounded-full" />
+            <img src="/cropped_circle_image.png" alt="Vaishu Organizer" className="w-7 h-7 rounded-full" />
             <span className="font-bold text-white text-sm">Vaishu Organizer</span>
           </div>
 
