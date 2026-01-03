@@ -31,6 +31,7 @@ export default function NotesWidget({ store }) {
         </div>
         <button
           onClick={() => setIsAdding(!isAdding)}
+          onTouchStart={(e) => e.stopPropagation()}
           className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
         >
           {isAdding ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}

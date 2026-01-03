@@ -198,3 +198,156 @@
 .react-calendar-dark abbr {
   text-decoration: none;
 }
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Touch-friendly button minimum sizes */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Tablet breakpoint (768px) */
+@media (max-width: 768px) {
+  /* Header adjustments */
+  header {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Reduce text sizes */
+  .text-sm {
+    font-size: 0.8125rem;
+  }
+
+  .text-xs {
+    font-size: 0.6875rem;
+  }
+
+  /* Larger touch targets for buttons */
+  button, 
+  .p-1 {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* React Grid Layout adjustments */
+  .react-grid-item .react-resizable-handle-se {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Scrollbar hide on touch */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* Mobile breakpoint (480px) */
+@media (max-width: 480px) {
+  /* Header mobile */
+  header {
+    height: 48px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+
+  /* Hide text labels on mobile, show icons only */
+  header .hidden-mobile {
+    display: none !important;
+  }
+
+  /* Even smaller text */
+  .text-sm {
+    font-size: 0.75rem;
+  }
+
+  .text-xs {
+    font-size: 0.625rem;
+  }
+
+  /* Larger touch targets */
+  button,
+  .p-1 {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .p-2 {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Widget adjustments */
+  .widget-panel {
+    border-radius: 0.5rem;
+  }
+
+  /* Calendar compact */
+  .custom-calendar button {
+    min-height: 32px;
+    min-width: 32px;
+  }
+
+  /* Hide scrollbar on mobile */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Use momentum scrolling on iOS */
+  .overflow-auto,
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  button,
+  select,
+  input,
+  textarea,
+  .cursor-pointer {
+    min-height: 44px;
+  }
+
+  /* Remove hover states that can be sticky on touch */
+  .hover\:bg-white\/10:hover {
+    background-color: transparent;
+  }
+
+  .hover\:bg-white\/20:hover {
+    background-color: transparent;
+  }
+
+  /* Add active states instead */
+  button:active,
+  .cursor-pointer:active {
+    opacity: 0.7;
+  }
+
+  /* Prevent text selection on buttons */
+  button {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent zoom on double-tap */
+  * {
+    touch-action: manipulation;
+  }
+}
+
+/* Landscape phone */
+@media (max-height: 480px) and (orientation: landscape) {
+  header {
+    height: 40px !important;
+  }
+
+  .widget-panel {
+    min-height: 150px;
+  }
+}

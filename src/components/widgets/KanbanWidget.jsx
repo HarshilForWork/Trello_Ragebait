@@ -75,6 +75,7 @@ export default function KanbanWidget({ store }) {
                   {/* List Header */}
                   <div 
                     onClick={() => toggleList(list.id)}
+                    onTouchStart={(e) => e.stopPropagation()}
                     className="flex items-center justify-between p-2 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors"
                   >
                     <div className="flex items-center gap-2 flex-1">
@@ -92,6 +93,7 @@ export default function KanbanWidget({ store }) {
                         setIsAddingTask(list.id)
                         setExpandedLists(prev => new Set([...prev, list.id]))
                       }}
+                      onTouchStart={(e) => e.stopPropagation()}
                       className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
                       title="Add task"
                     >

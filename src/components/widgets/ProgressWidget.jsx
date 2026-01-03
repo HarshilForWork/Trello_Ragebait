@@ -153,9 +153,10 @@ export default function ProgressWidget({ store }) {
         </div>
 
         {/* Period Switcher */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onTouchStart={(e) => e.stopPropagation()}>
           <button
             onClick={() => cyclePeriod('prev')}
+            onTouchStart={(e) => e.stopPropagation()}
             className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -165,6 +166,7 @@ export default function ProgressWidget({ store }) {
           </span>
           <button
             onClick={() => cyclePeriod('next')}
+            onTouchStart={(e) => e.stopPropagation()}
             className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
           >
             <ChevronRight className="w-4 h-4" />

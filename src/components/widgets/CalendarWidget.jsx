@@ -98,9 +98,10 @@ function CustomCalendar({ value, onChange, tileContent }) {
   return (
     <div className="w-full">
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2" onTouchStart={(e) => e.stopPropagation()}>
         <button
           onClick={prevMonth}
+          onTouchStart={(e) => e.stopPropagation()}
           className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
@@ -110,6 +111,7 @@ function CustomCalendar({ value, onChange, tileContent }) {
         </h3>
         <button
           onClick={nextMonth}
+          onTouchStart={(e) => e.stopPropagation()}
           className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
         >
           <ChevronRight className="w-3.5 h-3.5" />
@@ -363,10 +365,11 @@ export default function CalendarWidget({ store }) {
           <h3 className="font-semibold text-white text-sm">Calendar</h3>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" onTouchStart={(e) => e.stopPropagation()}>
           {/* Add Task Button */}
           <button
             onClick={openAddTask}
+            onTouchStart={(e) => e.stopPropagation()}
             className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
             title="Add task"
           >
@@ -376,6 +379,7 @@ export default function CalendarWidget({ store }) {
           {/* View Switcher */}
           <button
             onClick={() => cycleView('prev')}
+            onTouchStart={(e) => e.stopPropagation()}
             className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -385,6 +389,7 @@ export default function CalendarWidget({ store }) {
           </span>
           <button
             onClick={() => cycleView('next')}
+            onTouchStart={(e) => e.stopPropagation()}
             className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
