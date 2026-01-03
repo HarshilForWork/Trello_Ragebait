@@ -44,7 +44,7 @@ export default function KanbanWidget({ store }) {
     <div className="h-full flex flex-col bg-zinc-900/50 rounded-xl border border-white/10 overflow-hidden">
       {/* Widget Header */}
       <div className="flex items-center gap-2 p-3 border-b border-white/10 bg-zinc-800/50">
-        <button className="widget-drag-handle p-1 cursor-move touch-manipulation hidden lg:block" aria-label="Drag widget">
+        <button className="widget-drag-handle p-1 cursor-move touch-manipulation hidden xl:block" aria-label="Drag widget">
           <GripVertical className="w-4 h-4 text-white/40" />
         </button>
         <h3 className="font-semibold text-white text-sm">Quick View</h3>

@@ -75,9 +75,24 @@ export default function Dashboard({ store }) {
         const width = containerRef.current.offsetWidth - 32
         setContainerWidth(width)
         const screenWidth = window.innerWidth
-        setIsMobile(screenWidth < 480)
-        setIsTablet(screenWidth >= 480 && screenWidth < 1024)
-        console.log('Dashboard size update:', { screenWidth, isMobile: screenWidth < 480, isTablet: screenWidth >= 480 && screenWidth < 1024 })
+        const screenHeight = window.innerHeight
+        
+        // Check if it's a touch device
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+        
+        // Mobile: < 480px OR touch device with height > width and small screen
+        setIsMobile(screenWidth < 480 || (isTouchDevice && screenWidth < 768 && screenHeight > screenWidth))
+        
+        // Tablet: touch device with 480-1366px width (includes landscape tablets)
+        setIsTablet(isTouchDevice && screenWidth >= 480 && screenWidth <= 1366 && !isMobile)
+        
+        console.log('Dashboard size update:', { 
+          screenWidth, 
+          screenHeight, 
+          isTouchDevice,
+          isMobile: screenWidth < 480 || (isTouchDevice && screenWidth < 768 && screenHeight > screenWidth), 
+          isTablet: isTouchDevice && screenWidth >= 480 && screenWidth <= 1366
+        })
       }
     }
 
