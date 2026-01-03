@@ -34,6 +34,7 @@ import {
 // Preset wallpapers - beautiful high-quality images
 const WALLPAPERS = [
   { id: 'none', url: null, label: 'None' },
+  { id: 'custom-gradient', url: '/wallpapers/custom-gradient.jpg', label: 'Gradient' },
   { id: 'mountain', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80', label: 'Mountains' },
   { id: 'ocean', url: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=1920&q=80', label: 'Ocean' },
   { id: 'forest', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80', label: 'Forest' },
