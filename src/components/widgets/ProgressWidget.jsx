@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { GripVertical, TrendingUp, ChevronLeft, ChevronRight, Check } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { Checkbox } from '../ui/checkbox'
+import { GripVertical, TrendingUp, ChevronLeft, ChevronRight, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const formatDate = (date) => {
   const day = String(date.getDate()).padStart(2, '0')
@@ -13,6 +12,7 @@ const formatDate = (date) => {
 export default function ProgressWidget({ store }) {
   const [period, setPeriod] = useState('daily') // 'daily', 'weekly', 'monthly'
   const [showTasks, setShowTasks] = useState(false)
+  const [expandedTaskId, setExpandedTaskId] = useState(null)
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -44,10 +44,12 @@ export default function ProgressWidget({ store }) {
       label = 'Today'
     } else if (period === 'weekly') {
       label = 'This Week'
-      // Start of week (Sunday)
+      // Start of week (Monday)
+      const dayOfWeek = today.getDay()
+      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
       startDate = new Date(today)
-      startDate.setDate(today.getDate() - today.getDay())
-      // End of week (Saturday)
+      startDate.setDate(today.getDate() + daysToMonday)
+      // End of week (Sunday)
       endDate = new Date(startDate)
       endDate.setDate(startDate.getDate() + 6)
     } else if (period === 'monthly') {
@@ -121,7 +123,8 @@ export default function ProgressWidget({ store }) {
     }
   }
 
-  const handleToggleComplete = async (task) => {
+  const handleToggleComplete = async (task, e) => {
+    e.stopPropagation()
     // Toggle all checklist items for this card
     if (task.checklist && task.checklist.length > 0) {
       const newCompletedState = !task.isCompleted
@@ -129,6 +132,15 @@ export default function ProgressWidget({ store }) {
         await store.toggleChecklistItem(item.id, newCompletedState)
       }
     }
+  }
+
+  const toggleTaskExpand = (taskId) => {
+    setExpandedTaskId(expandedTaskId === taskId ? null : taskId)
+  }
+
+  const handleToggleSubtask = async (subtaskId, currentState, e) => {
+    e.stopPropagation()
+    await store.toggleChecklistItem(subtaskId, !currentState)
   }
 
   return (
@@ -203,39 +215,116 @@ export default function ProgressWidget({ store }) {
 
         {/* Task List */}
         {showTasks && stats.tasks.length > 0 && (
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {stats.tasks.map(task => (
-              <div
-                key={task.id}
-                className="p-2 rounded-lg bg-white/5 border border-white/10"
-              >
-                <div className="flex items-start gap-2">
-                  <button
-                    onClick={() => handleToggleComplete(task)}
-                    className="mt-0.5"
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {stats.tasks.map(task => {
+              const isExpanded = expandedTaskId === task.id
+              const hasSubtasks = task.checklist && task.checklist.length > 0
+              const hasDescription = task.description && task.description.trim().length > 0
+
+              return (
+                <div
+                  key={task.id}
+                  className="rounded-lg bg-white/5 border border-white/10 overflow-hidden"
+                >
+                  {/* Task Header */}
+                  <div
+                    onClick={() => (hasSubtasks || hasDescription) && toggleTaskExpand(task.id)}
+                    className={`p-2 ${hasSubtasks || hasDescription ? 'cursor-pointer hover:bg-white/10' : ''}`}
                   >
-                    {task.isCompleted ? (
-                      <div className="w-4 h-4 rounded bg-green-500 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
+                    <div className="flex items-start gap-2">
+                      <button
+                        onClick={(e) => handleToggleComplete(task, e)}
+                        className="mt-0.5 flex-shrink-0"
+                      >
+                        {task.isCompleted ? (
+                          <div className="w-4 h-4 rounded bg-green-500 flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        ) : (
+                          <div className="w-4 h-4 rounded border-2 border-white/30 hover:border-white/60 transition-colors" />
+                        )}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1">
+                          <p className={`text-xs text-white flex-1 ${task.isCompleted ? 'line-through opacity-60' : ''}`}>
+                            {task.title}
+                          </p>
+                          {(hasSubtasks || hasDescription) && (
+                            isExpanded ? (
+                              <ChevronUp className="w-3 h-3 text-white/40" />
+                            ) : (
+                              <ChevronDown className="w-3 h-3 text-white/40" />
+                            )
+                          )}
+                        </div>
+                        <p className="text-xs text-white/40 mt-0.5">
+                          {task.boardName} / {task.listName}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-blue-400">
+                            Due: {formatDate(task.dueDate)}
+                          </p>
+                          {hasSubtasks && (
+                            <p className="text-xs text-white/40">
+                              {task.checklist.filter(i => i.completed).length}/{task.checklist.length} subtasks
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="w-4 h-4 rounded border-2 border-white/30 hover:border-white/60 transition-colors" />
-                    )}
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs text-white ${task.isCompleted ? 'line-through opacity-60' : ''}`}>
-                      {task.title}
-                    </p>
-                    <p className="text-xs text-white/40 mt-0.5">
-                      {task.boardName} / {task.listName}
-                    </p>
-                    <p className="text-xs text-blue-400 mt-0.5">
-                      Due: {formatDate(task.dueDate)}
-                    </p>
+                    </div>
                   </div>
+
+                  {/* Expanded Details */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-3 pb-3 space-y-2 border-t border-white/10 pt-2">
+                          {/* Description */}
+                          {hasDescription && (
+                            <div>
+                              <p className="text-xs font-semibold text-white/50 mb-1">Description</p>
+                              <p className="text-xs text-white/70">{task.description}</p>
+                            </div>
+                          )}
+
+                          {/* Subtasks */}
+                          {hasSubtasks && (
+                            <div>
+                              <p className="text-xs font-semibold text-white/50 mb-1">Subtasks</p>
+                              <div className="space-y-1">
+                                {task.checklist.map(subtask => (
+                                  <div
+                                    key={subtask.id}
+                                    onClick={(e) => handleToggleSubtask(subtask.id, subtask.completed, e)}
+                                    className="flex items-center gap-2 p-1.5 rounded bg-white/5 hover:bg-white/10 cursor-pointer transition-colors"
+                                  >
+                                    {subtask.completed ? (
+                                      <div className="w-3.5 h-3.5 rounded bg-green-500 flex items-center justify-center flex-shrink-0">
+                                        <Check className="w-2.5 h-2.5 text-white" />
+                                      </div>
+                                    ) : (
+                                      <div className="w-3.5 h-3.5 rounded border border-white/30 flex-shrink-0" />
+                                    )}
+                                    <span className={`text-xs text-white/80 ${subtask.completed ? 'line-through opacity-60' : ''}`}>
+                                      {subtask.text}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 

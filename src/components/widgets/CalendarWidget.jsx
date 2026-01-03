@@ -14,7 +14,8 @@ const formatDate = (date) => {
 function CustomCalendar({ value, onChange, tileContent }) {
   const [viewDate, setViewDate] = useState(value || new Date())
 
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  // Monday first
+  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                        'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -23,7 +24,10 @@ function CustomCalendar({ value, onChange, tileContent }) {
   }
 
   const getFirstDayOfMonth = (date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+    // Get day of week (0=Sunday, 1=Monday, etc)
+    // Convert to Monday-first (0=Monday, 6=Sunday)
+    const day = new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+    return day === 0 ? 6 : day - 1
   }
 
   const generateCalendarDays = () => {
@@ -94,41 +98,41 @@ function CustomCalendar({ value, onChange, tileContent }) {
   return (
     <div className="w-full">
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <button
           onClick={prevMonth}
-          className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+          className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-3.5 h-3.5" />
         </button>
-        <h3 className="text-white font-semibold">
+        <h3 className="text-white font-semibold text-sm">
           {monthNames[viewDate.getMonth()]} {viewDate.getFullYear()}
         </h3>
         <button
           onClick={nextMonth}
-          className="p-2 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+          className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Day Headers */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-0.5 mb-1">
         {daysOfWeek.map(day => (
-          <div key={day} className="text-center text-xs text-white/50 font-medium py-1">
+          <div key={day} className="text-center text-xs text-white/50 font-medium py-0.5">
             {day}
           </div>
         ))}
       </div>
 
       {/* Days Grid */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-0.5">
         {days.map((item, index) => (
           <button
             key={index}
             onClick={() => onChange(item.date)}
             className={`
-              aspect-square p-1 rounded-lg text-sm flex flex-col items-center justify-center
+              aspect-square p-0.5 rounded text-xs flex flex-col items-center justify-center
               transition-colors relative
               ${item.isCurrentMonth ? 'text-white' : 'text-white/30'}
               ${isSelected(item.date) ? 'bg-blue-500 text-white' : 'hover:bg-white/10'}
@@ -307,9 +311,11 @@ export default function CalendarWidget({ store }) {
   }
 
   const renderWeeklyView = () => {
-    // Start of week (Sunday)
+    // Start of week (Monday)
     const startOfWeek = new Date(date)
-    startOfWeek.setDate(date.getDate() - date.getDay())
+    const dayOfWeek = date.getDay()
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+    startOfWeek.setDate(date.getDate() + daysToMonday)
     const weekCards = getCardsForWeek(startOfWeek)
     
     const days = Array.from({ length: 7 }, (_, i) => {
@@ -427,20 +433,22 @@ export default function CalendarWidget({ store }) {
                         setSelectedListId(board.lists[0].id)
                       }
                     }}
-                    className="px-2 py-1 bg-white/5 border border-white/10 rounded text-white text-xs"
+                    className="px-2 py-1 bg-zinc-800 border border-white/10 rounded text-white text-xs"
+                    style={{ backgroundColor: '#27272a' }}
                   >
                     {store.boards.map(board => (
-                      <option key={board.id} value={board.id}>{board.name}</option>
+                      <option key={board.id} value={board.id} style={{ backgroundColor: '#27272a', color: 'white' }}>{board.name}</option>
                     ))}
                   </select>
 
                   <select
                     value={selectedListId}
                     onChange={(e) => setSelectedListId(e.target.value)}
-                    className="px-2 py-1 bg-white/5 border border-white/10 rounded text-white text-xs"
+                    className="px-2 py-1 bg-zinc-800 border border-white/10 rounded text-white text-xs"
+                    style={{ backgroundColor: '#27272a' }}
                   >
                     {selectedBoard?.lists?.map(list => (
-                      <option key={list.id} value={list.id}>{list.name}</option>
+                      <option key={list.id} value={list.id} style={{ backgroundColor: '#27272a', color: 'white' }}>{list.name}</option>
                     ))}
                   </select>
                 </div>

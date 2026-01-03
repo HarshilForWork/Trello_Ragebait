@@ -54,10 +54,11 @@ export default function KanbanWidget({ store }) {
         <select
           value={selectedBoardId || ''}
           onChange={(e) => setSelectedBoardId(e.target.value)}
-          className="w-full mb-3 px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs"
+          className="w-full mb-3 px-2 py-1.5 bg-zinc-800 border border-white/10 rounded-lg text-white text-xs appearance-none cursor-pointer"
+          style={{ backgroundColor: '#27272a' }}
         >
           {store.boards.map(board => (
-            <option key={board.id} value={board.id}>
+            <option key={board.id} value={board.id} style={{ backgroundColor: '#27272a', color: 'white' }}>
               {board.name}
             </option>
           ))}

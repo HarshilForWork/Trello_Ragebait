@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/store/auth'
 import { StoreProvider, useStore } from '@/store'
 import { AuthModal } from '@/components/ui/auth-modal'
 import Dashboard from '@/components/Dashboard'
+import HelpWidget from '@/components/widgets/HelpWidget'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -30,7 +31,8 @@ import {
   LogOut,
   GripVertical,
   ChevronRight,
-  LayoutDashboard
+  LayoutDashboard,
+  HelpCircle
 } from 'lucide-react'
 
 // Preset wallpapers - beautiful high-quality images
@@ -285,6 +287,7 @@ function AppContent() {
   const [noteModalOpen, setNoteModalOpen] = useState(false)
   const [wallpaperModalOpen, setWallpaperModalOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null })
   const [currentCard, setCurrentCard] = useState(null)
   const [currentNote, setCurrentNote] = useState(null)
@@ -513,8 +516,8 @@ function AppContent() {
         <div className="flex items-center gap-3">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <LayoutGrid className="w-5 h-5 text-white" />
-            <span className="font-bold text-white text-sm">Mini-Trello</span>
+            <img src="/logo.png" alt="Vaishu Organizer" className="w-7 h-7 rounded-full" />
+            <span className="font-bold text-white text-sm">Vaishu Organizer</span>
           </div>
 
           {/* Board selector */}
@@ -595,6 +598,13 @@ function AppContent() {
             title="Export"
           >
             <Download className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={() => setHelpOpen(true)}
+            className="p-2 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            title="Help"
+          >
+            <HelpCircle className="w-5 h-5" />
           </button>
 
           {/* User Auth */}
@@ -684,6 +694,13 @@ function AppContent() {
           </div>
         )}
       </main>
+
+      {/* Help Modal */}
+      <AnimatePresence>
+        {helpOpen && (
+          <HelpWidget onClose={() => setHelpOpen(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Notes Panel */}
       <SlidePanel
