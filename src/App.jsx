@@ -841,8 +841,13 @@ function ChecklistTree({ items, parentId, cardId, store, isNew, removePendingIte
   const [addingSubItemFor, setAddingSubItemFor] = useState(null)
   const [newSubItemText, setNewSubItemText] = useState('')
 
-  // Filter items by parent
-  const filteredItems = items.filter(item => item.parent_id === parentId)
+  // Filter items by parent (treat null and undefined the same for root level)
+  const filteredItems = items.filter(item => {
+    if (parentId === null) {
+      return item.parent_id === null || item.parent_id === undefined
+    }
+    return item.parent_id === parentId
+  })
 
   const toggleExpand = (itemId) => {
     setExpandedItems(prev => {
