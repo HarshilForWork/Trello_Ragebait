@@ -197,7 +197,7 @@ export function StoreProvider({ children }) {
   }
 
   // Card operations
-  const createCard = async (listId, title, description = '') => {
+  const createCard = async (listId, title, description = '', dueDate = null) => {
     if (!isConfigured) return null
     const board = boards.find(b => b.lists?.some(l => l.id === listId))
     const list = board?.lists?.find(l => l.id === listId)
@@ -205,7 +205,7 @@ export function StoreProvider({ children }) {
 
     const { data, error } = await supabase
       .from('cards')
-      .insert([{ list_id: listId, title, description, position }])
+      .insert([{ list_id: listId, title, description, position, due_date: dueDate }])
       .select()
       .single()
 

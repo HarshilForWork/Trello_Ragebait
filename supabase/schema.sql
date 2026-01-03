@@ -45,8 +45,12 @@ CREATE TABLE IF NOT EXISTS cards (
   list_id UUID REFERENCES lists(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
-  position INT DEFAULT 0
+  position INT DEFAULT 0,
+  due_date DATE
 );
+
+-- Add due_date column if it doesn't exist (for migration)
+ALTER TABLE cards ADD COLUMN IF NOT EXISTS due_date DATE;
 
 -- Checklist items table (supports nested sub-items via parent_id)
 CREATE TABLE IF NOT EXISTS checklist_items (

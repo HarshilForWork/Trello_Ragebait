@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { AuthProvider, useAuth } from '@/store/auth'
 import { StoreProvider, useStore } from '@/store'
 import { AuthModal } from '@/components/ui/auth-modal'
+import Dashboard from '@/components/Dashboard'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
@@ -28,7 +29,8 @@ import {
   User,
   LogOut,
   GripVertical,
-  ChevronRight
+  ChevronRight,
+  LayoutDashboard
 } from 'lucide-react'
 
 // Preset wallpapers - beautiful high-quality images
@@ -275,6 +277,7 @@ function App() {
 function AppContent() {
   const store = useStore()
   const auth = useAuth()
+  const [view, setView] = useState('kanban') // 'kanban' or 'dashboard'
   const [notesOpen, setNotesOpen] = useState(false)
   const [boardModalOpen, setBoardModalOpen] = useState(false)
   const [listModalOpen, setListModalOpen] = useState(false)
@@ -545,6 +548,25 @@ function AppContent() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* View Toggle */}
+            <button
+              onClick={() => setView(view === 'kanban' ? 'dashboard' : 'kanban')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors"
+              title={`Switch to ${view === 'kanban' ? 'Dashboard' : 'Kanban'} view`}
+            >
+              {view === 'kanban' ? (
+                <>
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </>
+              ) : (
+                <>
+                  <LayoutGrid className="w-4 h-4" />
+                  <span className="hidden sm:inline">Kanban</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -626,35 +648,41 @@ function AppContent() {
 
       {/* Main content */}
       <main className="flex-1 overflow-hidden relative z-10">
-        <div className="h-full p-4 overflow-x-auto">
-          {!currentBoard ? (
-            /* Empty state */
-            <motion.div 
-              className="h-full flex flex-col items-center justify-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              <LayoutGrid className="w-16 h-16 text-white/30 mb-4" />
-              <h2 className="text-xl font-bold text-white mb-2">No board selected</h2>
-              <p className="text-white/50 mb-6">Create a board to get started</p>
-              <button 
-                onClick={() => setBoardModalOpen(true)}
-                className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
+        {view === 'dashboard' ? (
+          /* Dashboard View */
+          <Dashboard store={store} />
+        ) : (
+          /* Kanban View */
+          <div className="h-full p-4 overflow-x-auto">
+            {!currentBoard ? (
+              /* Empty state */
+              <motion.div 
+                className="h-full flex flex-col items-center justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
               >
-                <Plus className="w-4 h-4" />
-                Create Board
-              </button>
-            </motion.div>
-          ) : (
-            /* Board view with drag-and-drop */
-            <BoardWithDnd 
-              board={currentBoard} 
-              store={store} 
-              openCardModal={openCardModal}
-              setListModalOpen={setListModalOpen}
-            />
-          )}
-        </div>
+                <LayoutGrid className="w-16 h-16 text-white/30 mb-4" />
+                <h2 className="text-xl font-bold text-white mb-2">No board selected</h2>
+                <p className="text-white/50 mb-6">Create a board to get started</p>
+                <button 
+                  onClick={() => setBoardModalOpen(true)}
+                  className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Board
+                </button>
+              </motion.div>
+            ) : (
+              /* Board view with drag-and-drop */
+              <BoardWithDnd 
+                board={currentBoard} 
+                store={store} 
+                openCardModal={openCardModal}
+                setListModalOpen={setListModalOpen}
+              />
+            )}
+          </div>
+        )}
       </main>
 
       {/* Notes Panel */}
@@ -982,6 +1010,7 @@ function ChecklistTree({ items, parentId, cardId, store, isNew, removePendingIte
 function CardModal({ open, onOpenChange, card, store, showConfirm }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [dueDate, setDueDate] = useState('')
   const [newChecklistItem, setNewChecklistItem] = useState('')
   const [pendingItems, setPendingItems] = useState([]) // For new cards
   const [titleError, setTitleError] = useState(false)
@@ -1003,6 +1032,7 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
     if (card) {
       setTitle(card.title || '')
       setDescription(card.description || '')
+      setDueDate(card.due_date || '')
       setPendingItems([])
       setTitleError(false)
     }
@@ -1016,14 +1046,14 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
     
     if (isNew) {
       // Create card then add pending checklist items
-      const newCard = await store.createCard(card.list_id, title, description)
+      const newCard = await store.createCard(card.list_id, title, description, dueDate || null)
       if (newCard && pendingItems.length > 0) {
         for (const item of pendingItems) {
           await store.addChecklistItem(newCard.id, item.text)
         }
       }
     } else {
-      await store.updateCard(card.id, { title, description })
+      await store.updateCard(card.id, { title, description, due_date: dueDate || null })
     }
     onOpenChange(false)
   }
@@ -1084,6 +1114,15 @@ function CardModal({ open, onOpenChange, card, store, showConfirm }) {
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={3}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-white/50 uppercase mb-1 block">Due Date</label>
+            <Input
+              type="date"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              className="text-sm"
             />
           </div>
 

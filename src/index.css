@@ -115,3 +115,86 @@
 .wallpaper-option.active {
   @apply border-white ring-2 ring-white ring-offset-2 ring-offset-black;
 }
+
+/* Dashboard Widgets */
+.widget-panel {
+  @apply h-full rounded-xl overflow-hidden;
+}
+
+/* React Grid Layout */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+}
+
+.react-grid-item.resizing {
+  transition: none;
+  z-index: 100;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 100;
+  opacity: 0.8;
+}
+
+.react-grid-item .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+
+.react-grid-item .react-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.2) 50%);
+  border-bottom-right-radius: 8px;
+}
+
+/* React Calendar Dark Theme */
+.react-calendar-dark {
+  width: 100%;
+  background: transparent;
+  border: none;
+  @apply text-white;
+}
+
+.react-calendar-dark .react-calendar__navigation button {
+  @apply text-white bg-white/5 hover:bg-white/10 rounded-lg m-1;
+  min-width: 44px;
+  border: none;
+}
+
+.react-calendar-dark .react-calendar__navigation button:enabled:hover {
+  @apply bg-white/15;
+}
+
+.react-calendar-dark .react-calendar__tile {
+  @apply text-white bg-transparent hover:bg-white/10 rounded-lg m-0.5;
+  border: none;
+}
+
+.react-calendar-dark .react-calendar__tile--active {
+  @apply bg-blue-500 hover:bg-blue-600;
+}
+
+.react-calendar-dark .react-calendar__tile--now {
+  @apply bg-white/10;
+}
+
+.react-calendar-dark .react-calendar__month-view__days__day--weekend {
+  @apply text-red-400;
+}
+
+.react-calendar-dark .react-calendar__month-view__days__day--neighboringMonth {
+  @apply text-white/50;
+}
+
+.react-calendar-dark abbr {
+  text-decoration: none;
+}
