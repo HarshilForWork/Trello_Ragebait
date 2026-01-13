@@ -16,6 +16,7 @@ export function AuthProvider({ children }) {
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[Auth] Initial session loaded')
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
@@ -24,7 +25,18 @@ export function AuthProvider({ children }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session)
+        console.log('[Auth] Auth state changed:', event)
+        
+        // Only update state if session actually changed to prevent unnecessary re-renders
+        setSession(prevSession => {
+          const sessionChanged = prevSession?.access_token !== session?.access_token
+          if (sessionChanged || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+            console.log('[Auth] Session updated')
+            return session
+          }
+          return prevSession
+        })
+        
         setUser(session?.user ?? null)
         setLoading(false)
       }

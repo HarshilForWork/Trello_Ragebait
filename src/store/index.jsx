@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isConfigured } from '@/lib/supabase'
 
 const StoreContext = createContext(null)
@@ -17,6 +17,9 @@ export function StoreProvider({ children }) {
   const [activeBoard, setActiveBoard] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const loadDataRef = useRef(null)
+  const isMountedRef = useRef(false)
+  const hasLoadedDataRef = useRef(false)
 
   // Load all data from Supabase
   const loadData = useCallback(async () => {
@@ -26,6 +29,7 @@ export function StoreProvider({ children }) {
       return
     }
 
+    console.log('[Store] Loading data from Supabase...')
     setIsLoading(true)
     try {
       // Load boards with nested data
@@ -62,9 +66,6 @@ export function StoreProvider({ children }) {
       }))
 
       setBoards(sortedBoards)
-      if (sortedBoards.length > 0 && !activeBoard) {
-        setActiveBoard(sortedBoards[0].id)
-      }
 
       // Load notes
       const { data: notesData, error: notesError } = await supabase
@@ -76,40 +77,74 @@ export function StoreProvider({ children }) {
       setNotes(notesData || [])
 
       setError(null)
+      hasLoadedDataRef.current = true
+      console.log('[Store] Data loaded successfully')
     } catch (err) {
       console.error('Error loading data:', err)
       setError(err.message)
     } finally {
       setIsLoading(false)
     }
-  }, [activeBoard])
+  }, []) // Removed activeBoard dependency to prevent circular updates
 
+  // Keep ref updated
+  loadDataRef.current = loadData
+
+  // Initial load on mount
   useEffect(() => {
+    console.log('[Store] Component mounted, initial load')
+    isMountedRef.current = true
     loadData()
   }, [loadData])
+
+  // Set initial active board when boards load (separate effect to avoid circular dependency)
+  useEffect(() => {
+    if (boards.length > 0 && !activeBoard) {
+      console.log('[Store] Setting initial active board:', boards[0].id)
+      setActiveBoard(boards[0].id)
+    }
+  }, [boards, activeBoard])
 
   // Listen for auth changes to reload data
   useEffect(() => {
     if (!isConfigured) return
 
+    console.log('[Store] Setting up auth state listener')
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-          // Clear data on sign out
-          if (event === 'SIGNED_OUT') {
-            setBoards([])
-            setNotes([])
-            setActiveBoard(null)
-          } else {
-            // Reload data on sign in
-            loadData()
-          }
+        console.log('[Store] Auth state changed:', event)
+        
+        // Ignore INITIAL_SESSION - we already load on mount
+        if (event === 'INITIAL_SESSION') {
+          console.log('[Store] Ignoring INITIAL_SESSION (already loaded on mount)')
+          return
         }
+        
+        // Only reload on SIGNED_IN if we don't have data yet
+        // (prevents reload when tab becomes visible and Supabase re-validates session)
+        if (event === 'SIGNED_IN') {
+          if (!hasLoadedDataRef.current) {
+            console.log('[Store] User signed in and no data loaded yet, loading data...')
+            loadDataRef.current?.()
+          } else {
+            console.log('[Store] User signed in but data already loaded, skipping reload')
+          }
+        } else if (event === 'SIGNED_OUT') {
+          console.log('[Store] User signed out, clearing data...')
+          setBoards([])
+          setNotes([])
+          setActiveBoard(null)
+          hasLoadedDataRef.current = false
+        }
+        // Ignore TOKEN_REFRESHED and other events to prevent unnecessary reloads
       }
     )
 
-    return () => subscription.unsubscribe()
-  }, [loadData])
+    return () => {
+      console.log('[Store] Cleaning up auth listener')
+      subscription.unsubscribe()
+    }
+  }, []) // Empty dependency array - only set up once
 
   // Board operations
   const createBoard = async (name) => {
